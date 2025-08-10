@@ -1,0 +1,757 @@
+<!DOCTYPE html>
+<html lang="ta">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SOP Professional Exam Portal</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.23/jspdf.plugin.autotable.min.js"></script>
+    <style>
+        :root {
+            --primary-color: #0056b3; --secondary-color: #007bff; --danger-color: #dc3545;
+            --light-gray: #f8f9fa; --dark-gray: #343a40; --success-color: #28a745;
+        }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+            margin: 0; background-color: #e9ecef; color: var(--dark-gray);
+        }
+        .page {
+            display: none; padding: 20px 40px; max-width: 1100px; min-height: 80vh;
+            margin: 40px auto; background: white; border-radius: 12px;
+            box-shadow: 0 8px 30px rgba(0,0,0,0.1); animation: fadeIn 0.5s ease-in-out;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(-10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .page.active { display: block; }
+        .form-container { display: flex; flex-direction: column; gap: 18px; max-width: 450px; margin: 50px auto; }
+        input, select { padding: 14px; border: 1px solid #ccc; border-radius: 8px; font-size: 16px; width: 100%; box-sizing: border-box; }
+        .button {
+            padding: 14px 22px; color: white; border: none; border-radius: 8px; cursor: pointer;
+            font-size: 16px; font-weight: bold; transition: transform 0.2s, box-shadow 0.2s;
+            background: linear-gradient(45deg, var(--secondary-color), var(--primary-color));
+        }
+        .button:hover { transform: translateY(-2px); box-shadow: 0 4px 15px rgba(0, 123, 255, 0.3); }
+        .button.danger { background: linear-gradient(45deg, #ff4d4d, var(--danger-color)); }
+        .button.success { background: linear-gradient(45deg, #34d399, var(--success-color)); }
+        h1, h2, h3 { text-align: center; color: var(--primary-color); }
+        .link { color: var(--secondary-color); cursor: pointer; text-decoration: none; font-weight: bold; }
+        .link:hover { text-decoration: underline; }
+        .admin-section { margin-bottom: 30px; border: 1px solid #eee; padding: 20px; border-radius: 10px; background-color: var(--light-gray); }
+        table { width: 100%; border-collapse: collapse; margin-top: 15px; }
+        th, td { border: 1px solid #ddd; padding: 12px; text-align: left; }
+        th { background-color: #e9ecef; }
+        #test-area { -webkit-user-select: none; -moz-user-select: none; -ms-user-select: none; user-select: none; }
+        .mcq-option { display: block; margin: 10px 0; padding: 12px; border: 1px solid #ddd; border-radius: 8px; cursor: pointer; }
+        .mcq-option:hover { background-color: #f0f8ff; }
+        .mcq-option input { margin-right: 10px; }
+        .developer-info {
+            position: fixed; top: 20px; right: 20px; z-index: 1000;
+            display: flex; align-items: center; gap: 15px;
+            background-color: white; padding: 10px; border-radius: 10px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1); font-size: 12px; border: 1px solid #ddd;
+        }
+        .developer-info img {
+            width: 60px; height: 60px; border-radius: 50%; object-fit: cover;
+        }
+        .developer-info div { line-height: 1.4; }
+    </style>
+</head>
+<body>
+
+    <div class="developer-info">
+        <img src="image/my photos.png" alt="Developer Vignesh">
+        <div>
+            <strong>Vignesh</strong><br>
+            SNS College of Engineering<br>
+            Final Year Student, ECE
+        </div>
+    </div>
+
+    <div id="landing-page" class="page active">
+        <h1>SOP தேர்வு தளத்திற்கு வரவேற்கிறோம்</h1>
+        <div class="form-container" style="gap: 25px;">
+            <h3>உங்கள் பங்கைத் தேர்ந்தெடுக்கவும்</h3>
+            <button class="button" onclick="showPage('student-login-page')">நான் ஒரு மாணவர்</button>
+            <button class="button" onclick="showPage('admin-login-page')">நான் ஒரு அட்மின்</button>
+        </div>
+    </div>
+
+    <div id="student-login-page" class="page">
+        <h1>மாணவர் உள்நுழைவு</h1>
+        <div class="form-container">
+            <input type="text" id="student-login-username" placeholder="பயனர்பெயர்">
+            <input type="password" id="student-login-password" placeholder="கடவுச்சொல்">
+            <button class="button" onclick="handleLogin('student')">உள்நுழை</button>
+            <p style="text-align: center;">புதிய கணக்கு வேண்டுமா? <span class="link" onclick="showPage('register-page')">பதிவு செய்யவும்</span></p>
+            <p id="student-login-error" style="color:red; text-align:center;"></p>
+        </div>
+    </div>
+    
+    <div id="register-page" class="page">
+        <h1>மாணவர் பதிவு</h1>
+        <div class="form-container">
+            <input type="text" id="register-username" placeholder="புதிய பயனர்பெயர் (Unique Username)">
+            <input type="email" id="register-email" placeholder="மின்னஞ்சல் (Email)">
+            <input type="password" id="register-password" placeholder="புதிய கடவுச்சொல் (New Password)">
+            <button class="button" onclick="handleRegister()">பதிவு செய்</button>
+            <p style="text-align: center;">ஏற்கனவே கணக்கு உள்ளதா? <span class="link" onclick="showPage('student-login-page')">உள்நுழையவும்</span></p>
+            <p id="register-message" style="text-align:center;"></p>
+        </div>
+    </div>
+
+    <div id="student-dashboard" class="page" style="text-align: center;">
+        <h1 id="welcome-message"></h1>
+        <p id="exam-status-message">தற்போது தேர்வு செயலில் உள்ளதா என சரிபார்க்கிறது...</p>
+        <p><strong>⚠️ எச்சரிக்கை:</strong> தேர்விலிருந்து வெளியேறவோ, வேறு Tab-க்கு மாறவோ, காப்பி/பேஸ்ட் செய்யவோ கூடாது. விதி மீறினால் தேர்வு தானாகவே முடிந்துவிடும்.</p>
+        <button id="start-test-btn" class="button" onclick="startTest()" disabled>தேர்வைத் தொடங்கு</button>
+        <br><br>
+        <button class="button" onclick="logout()">வெளியேறு</button>
+    </div>
+
+    <div id="sop-test-page" class="page">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2 id="test-title">SOP தேர்வு</h2>
+            <div id="timer" style="font-size: 1.8em; font-weight: bold; color: var(--danger-color);"></div>
+        </div>
+        <hr>
+        <div id="test-area" style="margin-top: 20px;"></div>
+        <br>
+        <button class="button" onclick="submitTest()">தேர்வை சமர்ப்பி</button>
+    </div>
+    
+    <div id="result-page" class="page" style="text-align: center;">
+        <h1>தேர்வு முடிவுகள்</h1>
+        <h2 id="result-summary"></h2>
+        <p id="result-details"></p>
+        <p>உங்கள் தேர்வு வெற்றிகரமாக சமர்ப்பிக்கப்பட்டது.</p>
+        <br><br>
+        <button class="button" onclick="logout()">முகப்புக்குச் செல்</button>
+    </div>
+    
+    <div id="admin-login-page" class="page">
+        <h1>அட்மின் உள்நுழைவு</h1>
+        <div class="form-container">
+            <input type="text" id="admin-login-username" placeholder="அட்மின் பயனர்பெயர்">
+            <input type="password" id="admin-login-password" placeholder="அட்மின் கடவுச்சொல்">
+            <button class="button" onclick="handleLogin('admin')">உள்நுழை</button>
+            <p style="text-align: center;">புதிய அட்மின் கணக்கு வேண்டுமா? <span class="link" onclick="showPage('admin-register-page')">இங்கே பதிவு செய்யவும்</span></p>
+            <p id="admin-login-error" style="color:red; text-align:center;"></p>
+        </div>
+    </div>
+
+    <div id="admin-register-page" class="page">
+        <h1>புதிய அட்மின் பதிவு</h1>
+        <div class="form-container">
+            <input type="text" id="admin-register-username" placeholder="புதிய அட்மின் பயனர்பெயர்">
+            <input type="password" id="admin-register-password" placeholder="புதிய கடவுச்சொல்">
+            <input type="password" id="admin-register-secret" placeholder="அட்மின் பதிவு ரகசிய குறியீடு">
+            <button class="button" onclick="handleAdminRegister()">அட்மினாக பதிவு செய்</button>
+            <p style="text-align: center;">ஏற்கனவே கணக்கு உள்ளதா? <span class="link" onclick="showPage('admin-login-page')">உள்நுழையவும்</span></p>
+            <p id="admin-register-message" style="text-align:center;"></p>
+        </div>
+    </div>
+
+    <div id="admin-dashboard" class="page">
+        <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap;">
+            <h1>அட்மின் கட்டுப்பாட்டு மையம்</h1>
+            <button class="button" onclick="logout()">வெளியேறு</button>
+        </div>
+        
+        <div class="admin-section">
+            <h2>புதிய தேர்வை நிர்வகி (Manage New Exam)</h2>
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+                <div>
+                    <label for="question-topic">கேள்விக்கான தலைப்பு:</label>
+                    <input type="text" id="question-topic" placeholder="e.g., Leadership, Java Basics" value="Problem Solving">
+                </div>
+                <div>
+                    <label for="test-duration">தேர்வு நேரம் (5-120 நிமிடங்கள்):</label>
+                    <input type="number" id="test-duration" min="5" max="120" value="10">
+                </div>
+                <div>
+                    <label for="num-questions">கேள்விகளின் எண்ணிக்கை:</label>
+                    <input type="number" id="num-questions" min="1" value="5">
+                </div>
+                 <div>
+                    <label for="question-type">கேள்வியின் வகை (SOP):</label>
+                    <select id="question-type">
+                        <option value="mcq">பல தேர்வு கேள்வி (MCQ)</option>
+                        <option value="text">தட்டச்சு கேள்வி (Text)</option>
+                    </select>
+                </div>
+            </div>
+            <div style="margin-top: 20px; display: flex; gap: 15px;">
+                <button class="button success" onclick="startNewExam()">புதிய தேர்வைத் தொடங்கு</button>
+                <button class="button danger" onclick="endCurrentExam()">செயலில் உள்ள தேர்வை இப்போது முடி</button>
+            </div>
+             <p id="admin-message" style="text-align:center; margin-top:10px;"></p>
+        </div>
+        
+        <div class="admin-section">
+            <h2>பயனர் மேலாண்மை (User Management)</h2>
+             <button class="button" onclick="downloadAllUsersCSV()">பயனர் பட்டியலை (CSV) பதிவிறக்கு</button>
+             <div id="all-users-container" style="max-height: 300px; overflow-y: auto; margin-top: 15px;"></div>
+        </div>
+
+        <div class="admin-section">
+            <h2>தேர்வு முடிவுகள் (Exam Results)</h2>
+            <label for="session-selector">முடிவுகளைக் காண ஒரு தேர்வு அமர்வைத் தேர்ந்தெடுக்கவும்:</label>
+            <select id="session-selector" onchange="loadSessionData()"></select>
+            <div style="margin-top:15px; display:flex; gap: 15px;">
+                <button class="button" onclick="downloadSessionCSV()">முடிவுகள் (CSV)</button>
+                <button class="button" onclick="downloadSessionPDF()">முடிவுகள் (PDF)</button>
+            </div>
+            <h3 id="results-title" style="margin-top:20px;"></h3>
+            <div id="results-list-container" style="max-height: 400px; overflow-y: auto; margin-top: 15px;"></div>
+        </div>
+    </div>
+
+<script>
+// ===================================================================================
+// PROFESSIONAL MULTI-SESSION EXAM APPLICATION V10 - (JSON Parsing Fixed)
+// ===================================================================================
+
+const { jsPDF } = window.jspdf;
+const DB_KEY = 'professionalSopExamApp_v10';
+const SECRET_ADMIN_CODE = 'SNSCE_ADMIN_2025';
+
+let db = {};
+let testTimerInterval;
+let activeSessionCheckInterval;
+let cheatingAttempts = 0;
+
+// --- 1. INITIALIZATION & DATABASE ---
+window.onload = function() {
+    const storedDb = localStorage.getItem(DB_KEY);
+    if (storedDb) {
+        db = JSON.parse(storedDb);
+    } else {
+        db = {
+            users: [],
+            sessions: [],
+            activeSessionId: null,
+        };
+        const defaultAdmin = { 
+            username: 'admin', 
+            password: 'password123', 
+            role: 'admin', 
+            email: 'admin@example.com',
+            registrationDate: new Date().toLocaleDateString(),
+            loginHistory: []
+        };
+        db.users.push(defaultAdmin);
+        saveDb();
+    }
+    const loggedInUser = JSON.parse(sessionStorage.getItem('loggedInUser'));
+    if(loggedInUser) {
+        if(loggedInUser.role === 'admin') showPage('admin-dashboard');
+        else showPage('student-dashboard');
+        refreshPage(loggedInUser.role);
+    } else {
+        showPage('landing-page');
+    }
+};
+
+function saveDb() { localStorage.setItem(DB_KEY, JSON.stringify(db)); }
+function showPage(pageId) {
+    document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+    document.getElementById(pageId).classList.add('active');
+}
+function refreshPage(role) {
+    if(role === 'admin') refreshAdminDashboard();
+    if(role === 'student') refreshStudentDashboard();
+}
+
+// --- 2. AUTHENTICATION ---
+function handleLogin(role) {
+    const username = document.getElementById(`${role}-login-username`).value.trim();
+    const password = document.getElementById(`${role}-login-password`).value;
+    const errorEl = document.getElementById(`${role}-login-error`);
+    const userIndex = db.users.findIndex(u => u.username.toLowerCase() === username.toLowerCase() && u.password === password && u.role === role);
+    if (userIndex !== -1) {
+        const user = db.users[userIndex];
+        if(role === 'student'){
+            const oneHourAgo = Date.now() - (60 * 60 * 1000);
+            const recentLogins = user.loginHistory.filter(time => time > oneHourAgo);
+            if(recentLogins.length >= 20) {
+                errorEl.textContent = 'நீங்கள் ஒரு மணி நேரத்தில் உள்நுழைவதற்கான வரம்பை மீறிவிட்டீர்கள்.';
+                return;
+            }
+            user.loginHistory.push(Date.now());
+        }
+        const sessionUser = { username: user.username, role: user.role, loginTime: new Date().toLocaleString() };
+        sessionStorage.setItem('loggedInUser', JSON.stringify(sessionUser));
+        db.users[userIndex] = user;
+        saveDb();
+        errorEl.textContent = '';
+        showPage(role === 'student' ? 'student-dashboard' : 'admin-dashboard');
+        refreshPage(role);
+    } else {
+        errorEl.textContent = 'தவறான பயனர்பெயர் அல்லது கடவுச்சொல்.';
+    }
+}
+
+function handleRegister() {
+    const username = document.getElementById('register-username').value.trim();
+    const email = document.getElementById('register-email').value.trim();
+    const password = document.getElementById('register-password').value;
+    const messageEl = document.getElementById('register-message');
+    if(!username || !email || !password){
+        messageEl.textContent = 'அனைத்து புலங்களையும் நிரப்பவும்.';
+        messageEl.style.color = 'red';
+        return;
+    }
+    if (db.users.find(u => u.username.toLowerCase() === username.toLowerCase())) {
+        messageEl.textContent = 'இந்த பயனர்பெயர் ஏற்கனவே உள்ளது.';
+        messageEl.style.color = 'red';
+        return;
+    }
+    db.users.push({ 
+        username, email, password, role: 'student',
+        registrationDate: new Date().toLocaleDateString(),
+        loginHistory: [] 
+    });
+    saveDb();
+    messageEl.textContent = 'பதிவு வெற்றி! இப்போது உள்நுழையலாம்.';
+    messageEl.style.color = 'green';
+    setTimeout(() => showPage('student-login-page'), 2000);
+}
+
+function handleAdminRegister() {
+    const username = document.getElementById('admin-register-username').value.trim();
+    const password = document.getElementById('admin-register-password').value;
+    const secret = document.getElementById('admin-register-secret').value;
+    const messageEl = document.getElementById('admin-register-message');
+    if(secret !== SECRET_ADMIN_CODE){
+        messageEl.textContent = 'தவறான ரகசிய குறியீடு!';
+        messageEl.style.color = 'red';
+        return;
+    }
+    if (db.users.find(u => u.username.toLowerCase() === username.toLowerCase())) {
+        messageEl.textContent = 'இந்த பயனர்பெயர் ஏற்கனவே உள்ளது.';
+        messageEl.style.color = 'red';
+        return;
+    }
+    db.users.push({ 
+        username, password, role: 'admin', email: `${username}@admin.com`,
+        registrationDate: new Date().toLocaleDateString(),
+        loginHistory: []
+    });
+    saveDb();
+    messageEl.textContent = 'அட்மின் பதிவு வெற்றி! இப்போது உள்நுழையலாம்.';
+    messageEl.style.color = 'green';
+    setTimeout(() => showPage('admin-login-page'), 2000);
+}
+
+function logout() {
+    sessionStorage.removeItem('loggedInUser');
+    clearInterval(activeSessionCheckInterval);
+    showPage('landing-page');
+    if (document.fullscreenElement) document.exitFullscreen();
+}
+
+// --- 3. ADMIN DASHBOARD ---
+function refreshAdminDashboard() {
+    populateSessionSelector();
+    loadSessionData();
+    displayAllUsers();
+}
+
+function displayAllUsers() {
+    const container = document.getElementById('all-users-container');
+    const studentUsers = db.users.filter(u => u.role === 'student');
+    const headers = ['Username', 'Email', 'Registered Date', 'Login Count'];
+    let table = '<table><thead><tr>' + headers.map(h => `<th>${h}</th>`).join('') + '</tr></thead><tbody>';
+    if (studentUsers.length === 0) {
+        table += '<tr><td colspan="4">மாணவர்கள் யாரும் பதிவு செய்யவில்லை.</td></tr>';
+    } else {
+        studentUsers.forEach(u => {
+            table += `<tr>
+                <td>${u.username || ''}</td>
+                <td>${u.email || ''}</td>
+                <td>${u.registrationDate || ''}</td>
+                <td>${u.loginHistory ? u.loginHistory.length : 0}</td>
+            </tr>`;
+        });
+    }
+    table += '</tbody></table>';
+    container.innerHTML = table;
+}
+
+function populateSessionSelector() {
+    const selector = document.getElementById('session-selector');
+    selector.innerHTML = '<option value="">--ஒரு அமர்வைத் தேர்ந்தெடுக்கவும்--</option>';
+    db.sessions.slice().reverse().forEach(session => {
+        const option = document.createElement('option');
+        option.value = session.id;
+        const status = session.endTime ? 'முடிந்தது' : 'செயலில் உள்ளது';
+        option.textContent = `தேர்வு #${session.id} (${new Date(session.startTime).toLocaleString()}) - ${status}`;
+        selector.add(option);
+    });
+}
+
+function loadSessionData() {
+    const sessionId = document.getElementById('session-selector').value;
+    const container = document.getElementById('results-list-container');
+    const title = document.getElementById('results-title');
+    if (!sessionId) {
+        title.textContent = 'தேர்வு முடிவுகள்';
+        container.innerHTML = '<p>முடிவுகளைக் காண மேலே இருந்து ஒரு தேர்வு அமர்வைத் தேர்ந்தெடுக்கவும்.</p>';
+        return;
+    }
+    const session = db.sessions.find(s => s.id == sessionId);
+    if (!session) { container.innerHTML = '<p>தேர்வு அமர்வு காணப்படவில்லை.</p>'; return; }
+    title.textContent = `தேர்வு #${session.id} முடிவுகள் (${session.settings.topic})`;
+    const headers = ['மாணவர்', 'மதிப்பெண்', 'நிலை', 'விதிமீறல்கள்', 'தேதி', 'Login நேரம்', 'Logout நேரம்'];
+    let table = '<table><thead><tr>' + headers.map(h => `<th>${h}</th>`).join('') + '</tr></thead><tbody>';
+    if (session.results.length === 0) {
+        table += '<tr><td colspan="7">இந்த தேர்வுக்கு இன்னும் முடிவுகள் எதுவும் இல்லை.</td></tr>';
+    } else {
+        session.results.forEach(r => {
+            table += `<tr>
+                <td>${r.username || ''}</td>
+                <td>${r.score !== undefined ? r.score : ''}</td>
+                <td>${r.status || ''}</td>
+                <td style="color:red; font-weight:bold;">${r.violations || 0}</td>
+                <td>${r.date || ''}</td>
+                <td>${r.loginTime || ''}</td>
+                <td>${r.logoutTime || ''}</td>
+            </tr>`;
+        });
+    }
+    table += '</tbody></table>';
+    container.innerHTML = table;
+}
+
+function startNewExam() {
+    if (db.activeSessionId) {
+        alert("ஏற்கனவே ஒரு தேர்வு செயலில் உள்ளது. புதிய ஒன்றைத் தொடங்குவதற்கு முன் அதை முடிக்கவும்.");
+        return;
+    }
+    const newSession = {
+        id: db.sessions.length + 1,
+        startTime: Date.now(),
+        endTime: null,
+        settings: {
+            duration: parseInt(document.getElementById('test-duration').value),
+            numQuestions: parseInt(document.getElementById('num-questions').value),
+            topic: document.getElementById('question-topic').value,
+            questionType: document.getElementById('question-type').value,
+        },
+        results: [],
+    };
+    db.sessions.push(newSession);
+    db.activeSessionId = newSession.id;
+    saveDb();
+    const msgEl = document.getElementById('admin-message');
+    msgEl.style.color = 'green';
+    msgEl.textContent = `தேர்வு #${newSession.id} வெற்றிகரமாகத் தொடங்கப்பட்டது!`;
+    setTimeout(() => msgEl.textContent = '', 4000);
+    populateSessionSelector();
+    document.getElementById('session-selector').value = newSession.id;
+    loadSessionData();
+}
+
+function endCurrentExam() {
+    if (!db.activeSessionId) {
+        alert("தற்போது செயலில் தேர்வுகள் எதுவும் இல்லை.");
+        return;
+    }
+    const session = db.sessions.find(s => s.id === db.activeSessionId);
+    if (session) {
+        session.endTime = Date.now();
+        db.activeSessionId = null;
+        saveDb();
+        alert(`தேர்வு #${session.id} முடித்து வைக்கப்பட்டது.`);
+        populateSessionSelector();
+    }
+}
+
+// --- 4. STUDENT DASHBOARD & EXAM LOGIC ---
+function refreshStudentDashboard() {
+    const user = JSON.parse(sessionStorage.getItem('loggedInUser'));
+    document.getElementById('welcome-message').textContent = `வணக்கம், ${user.username}!`;
+    clearInterval(activeSessionCheckInterval);
+    activeSessionCheckInterval = setInterval(checkExamStatus, 3000);
+    checkExamStatus();
+}
+
+function checkExamStatus() {
+    const activeSession = db.sessions.find(s => s.id === db.activeSessionId && !s.endTime);
+    const startBtn = document.getElementById('start-test-btn');
+    const statusMsg = document.getElementById('exam-status-message');
+    
+    if (activeSession) {
+        // The logic to prevent retakes has been removed to allow for testing.
+        statusMsg.textContent = `தேர்வு #${activeSession.id} (${activeSession.settings.topic}) தற்போது செயலில் உள்ளது. நீங்கள் தயாரானதும் தொடங்கலாம்.`;
+        statusMsg.style.color = 'green';
+        startBtn.disabled = false;
+    } else {
+        statusMsg.textContent = 'தற்போது செயலில் தேர்வுகள் எதுவும் இல்லை. அட்மின் தொடங்கும் வரை காத்திருக்கவும்.';
+        statusMsg.style.color = 'red';
+        startBtn.disabled = true;
+    }
+}
+
+
+async function startTest() {
+    const session = db.sessions.find(s => s.id === db.activeSessionId);
+    if(!session) { alert("செயலில் தேர்வு இல்லை!"); return; }
+    
+    const elem = document.documentElement;
+    try {
+        if(elem.requestFullscreen) await elem.requestFullscreen();
+        
+        showPage('sop-test-page');
+        cheatingAttempts = 0;
+        
+        const testArea = document.getElementById('test-area');
+        testArea.innerHTML = '<h3>கேள்விகளை ஏற்றுகிறது... தயவுசெய்து காத்திருக்கவும்.</h3>';
+        
+        const settings = session.settings;
+        document.getElementById('test-title').textContent = `${settings.topic} Test`;
+        
+        const questions = await getAIQuestions(settings);
+        
+        if(questions) {
+            sessionStorage.setItem('currentQuestions', JSON.stringify(questions));
+            renderQuestions(questions);
+            startTimer(settings.duration);
+            enableProctoring();
+        } else {
+             if (document.fullscreenElement) document.exitFullscreen();
+             showPage('student-dashboard');
+             testArea.innerHTML = '';
+        }
+
+    } catch (err) {
+        alert(`தேர்வைத் தொடங்க முழுத்திரை பயன்முறை அவசியம். மீண்டும் முயற்சிக்கவும்.`);
+    }
+}
+
+async function getAIQuestions(settings) {
+    // =========================================================================================
+    // === 🔴 SECURITY WARNING: Your API key is still exposed here. This is not safe.       ===
+    // =========================================================================================
+    const API_KEY = 'AIzaSyDkUpP36QexUJUhG3ANy86H12HstzHEx9A'; 
+    const API_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${API_KEY}`;
+    
+    let prompt = `Generate ${settings.numQuestions} job interview questions on the topic "${settings.topic}".
+    The question type must be ${settings.questionType === 'mcq' ? 'Multiple Choice (MCQ)' : 'short text answer'}.
+    For MCQs, provide 4 options and clearly indicate the correct answer index (0, 1, 2, or 3).
+    Format the output as a valid JSON array of objects.
+    Each object must have these keys: "text", and if MCQ, "options" (array of 4 strings) and "correct" (the index).
+    Do not include any other text, explanation, or markdown formatting like \`\`\`json. The response must be only the JSON array.`;
+    
+    try {
+        const response = await fetch(API_URL, {
+            method: 'POST', headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }] })
+        });
+
+        if (!response.ok) {
+            const errorData = await response.json().catch(() => null);
+            const errorMessage = errorData?.error?.message || `HTTP error! Status: ${response.status}`;
+            throw new Error(errorMessage);
+        }
+
+        const data = await response.json();
+
+        if (!data.candidates || data.candidates.length === 0) {
+            const blockReason = data.promptFeedback?.blockReason || "Unknown reason";
+            throw new Error(`API returned no content. This might be due to safety settings (Block Reason: ${blockReason}) or an invalid prompt.`);
+        }
+
+        // === FIX STARTS HERE ===
+        // This new logic cleans the API response to remove markdown wrappers.
+        let rawText = data.candidates[0].content.parts[0].text;
+        if (rawText.startsWith("```json")) {
+            rawText = rawText.replace("```json\n", "").replace("\n```", "");
+        }
+        // === FIX ENDS HERE ===
+
+        // Parse the cleaned text
+        const generatedQuestions = JSON.parse(rawText);
+        return generatedQuestions.map((q, i) => ({ ...q, id: i, type: settings.questionType }));
+
+    } catch (error) {
+        console.error("AI Question Generation Failed:", error);
+        // Add the invalid text to the error message for easier debugging
+        const errorText = error.message.includes('valid JSON') ? `${error.message}\n\nInvalid Text Received:\n${data.candidates[0].content.parts[0].text}` : error.message;
+        alert(`கேள்விகளை உருவாக்குவதில் பிழை: ${errorText}\n\nஉங்கள் API Key சரியாக உள்ளதா மற்றும் உங்கள் Google Cloud திட்டத்தில் பில்லிங் இயக்கப்பட்டுள்ளதா என சரிபார்க்கவும்.`);
+        return null;
+    }
+}
+
+function renderQuestions(questions) {
+    const testArea = document.getElementById('test-area');
+    let html = '';
+    questions.forEach((q, index) => {
+        html += `<div style="margin-bottom: 25px;"><h4>கேள்வி ${index + 1}: ${q.text}</h4>`;
+        if (q.type === 'mcq') {
+            q.options.forEach((opt, optIndex) => {
+                html += `<label class="mcq-option"><input type="radio" name="question_${q.id}" value="${optIndex}"> ${opt}</label>`;
+            });
+        } else {
+            html += `<textarea id="answer_${q.id}" rows="6" style="width: 100%; padding: 10px;"></textarea>`;
+        }
+        html += `</div>`;
+    });
+    testArea.innerHTML = html;
+}
+
+function startTimer(duration) {
+    clearInterval(testTimerInterval);
+    let timeLeft = duration * 60;
+    const timerEl = document.getElementById('timer');
+    testTimerInterval = setInterval(() => {
+        const activeSession = db.sessions.find(s => s.id === db.activeSessionId);
+        if (timeLeft <= 0 || (activeSession && activeSession.endTime)) {
+            const reason = timeLeft <= 0 ? "நேரம் முடிந்தது" : "அட்மின் தேர்வை முடித்தார்";
+            alert(`தேர்வு முடிந்தது! (${reason})`);
+            submitTest({ autoSubmitted: true, reason });
+            return;
+        }
+        timeLeft--;
+        const minutes = Math.floor(timeLeft / 60);
+        const seconds = timeLeft % 60;
+        timerEl.textContent = `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+    }, 1000);
+}
+
+// --- 5. PROCTORING & SUBMISSION ---
+function enableProctoring() { 
+    document.addEventListener('visibilitychange', handleVisibilityViolation);
+    document.body.addEventListener('copy', handleCheatingViolation);
+    document.body.addEventListener('paste', handleCheatingViolation);
+    document.body.addEventListener('dragstart', handleCheatingViolation);
+    document.body.addEventListener('drop', handleCheatingViolation);
+}
+
+function disableProctoring() { 
+    document.removeEventListener('visibilitychange', handleVisibilityViolation);
+    document.body.removeEventListener('copy', handleCheatingViolation);
+    document.body.removeEventListener('paste', handleCheatingViolation);
+    document.body.removeEventListener('dragstart', handleCheatingViolation);
+    document.body.removeEventListener('drop', handleCheatingViolation);
+    clearInterval(testTimerInterval); 
+}
+
+function handleVisibilityViolation() {
+    if (document.hidden) {
+        if (!document.getElementById('sop-test-page').classList.contains('active')) return;
+        cheatingAttempts++;
+        alert("விதி மீறல் (Tab Switch)! தேர்வு உடனடியாக சமர்ப்பிக்கப்படும்.");
+        submitTest({ autoSubmitted: true, reason: 'Tab Switch Violation' });
+    }
+}
+
+function handleCheatingViolation(e) {
+    e.preventDefault();
+    if (!document.getElementById('sop-test-page').classList.contains('active')) return;
+    cheatingAttempts++;
+    alert(`விதி மீறல் (${e.type})! தேர்வு உடனடியாக சமர்ப்பிக்கப்படும்.`);
+    submitTest({ autoSubmitted: true, reason: `${e.type} Violation` });
+}
+
+function submitTest({ autoSubmitted = false, reason = "Completed" } = {}) {
+    if (!document.getElementById('sop-test-page').classList.contains('active')) return;
+    const questions = JSON.parse(sessionStorage.getItem('currentQuestions'));
+    if(!questions) return;
+    let score = 0;
+    questions.forEach(q => {
+        if (q.type === 'mcq') {
+            const selected = document.querySelector(`input[name="question_${q.id}"]:checked`);
+            if (selected && parseInt(selected.value) === q.correct) score++;
+        } else {
+             const answer = document.getElementById(`answer_${q.id}`).value;
+             if(answer.trim().length > 10) score++;
+        }
+    });
+    const finalScore = Math.round((score / questions.length) * 100);
+    const user = JSON.parse(sessionStorage.getItem('loggedInUser'));
+    const session = db.sessions.find(s => s.id === db.activeSessionId);
+    if(session) {
+        session.results.push({
+            username: user.username,
+            score: finalScore,
+            status: autoSubmitted ? `தானாக சமர்ப்பிக்கப்பட்டது (${reason})` : 'முழுமையடைந்தது',
+            violations: cheatingAttempts,
+            date: new Date().toLocaleDateString(),
+            loginTime: user.loginTime,
+            logoutTime: new Date().toLocaleString()
+        });
+        saveDb();
+    }
+    disableProctoring();
+    document.getElementById('result-summary').textContent = `உங்கள் மதிப்பெண்: ${finalScore}/100`;
+    document.getElementById('result-details').textContent = autoSubmitted ? `காரணம்: ${reason}` : '';
+    showPage('result-page');
+    if (document.fullscreenElement) document.exitFullscreen();
+    sessionStorage.removeItem('currentQuestions');
+}
+
+// --- 6. DATA EXPORT ---
+function downloadAllUsersCSV() {
+    const studentUsers = db.users.filter(u => u.role === 'student');
+    if (studentUsers.length === 0) { alert("பதிவிறக்க பயனர்கள் யாரும் இல்லை."); return; }
+    const headers = ['username', 'email', 'registrationDate', 'loginCount'];
+    let csvContent = headers.join(",") + "\n";
+    csvContent += studentUsers.map(user => {
+        return [
+            JSON.stringify(user.username),
+            JSON.stringify(user.email),
+            JSON.stringify(user.registrationDate),
+            user.loginHistory ? user.loginHistory.length : 0
+        ].join(",");
+    }).join("\n");
+    downloadFile(csvContent, 'all_registered_users.csv', 'text/csv;charset=utf-8,');
+}
+
+function downloadSessionCSV() {
+    const sessionId = document.getElementById('session-selector').value;
+    if (!sessionId) { alert("பதிவிறக்க ஒரு தேர்வு அமர்வைத் தேர்ந்தெடுக்கவும்."); return; }
+    const session = db.sessions.find(s => s.id == sessionId);
+    const data = session.results;
+    if (!data || data.length === 0) { alert("பதிவிறக்க தரவு இல்லை."); return; }
+    const headers = Object.keys(data[0]);
+    let csvContent = headers.join(",") + "\n";
+    csvContent += data.map(row => headers.map(h => JSON.stringify(row[h] || '')).join(",")).join("\n");
+    downloadFile(csvContent, `exam_results_session_${sessionId}.csv`, 'text/csv;charset=utf-8,');
+}
+
+function downloadSessionPDF() {
+    const sessionId = document.getElementById('session-selector').value;
+    if (!sessionId) { alert("ஒரு தேர்வு அமர்வைத் தேர்ந்தெடுக்கவும்."); return; }
+    const session = db.sessions.find(s => s.id == sessionId);
+    const data = session.results;
+    if (!data || data.length === 0) { alert("PDF உருவாக்க தரவு இல்லை."); return; }
+    const doc = new jsPDF();
+    doc.text(`Exam Results - Session #${sessionId}`, 14, 15);
+    doc.text(`Topic: ${session.settings.topic} | Date: ${new Date(session.startTime).toLocaleDateString()}`, 14, 22);
+    const tableColumn = ["Student", "Score", "Status", "Violations", "Login Time", "Logout Time"];
+    const tableRows = [];
+    data.forEach(item => {
+        const rowData = [
+            item.username, item.score, item.status, item.violations, item.loginTime, item.logoutTime
+        ];
+        tableRows.push(rowData);
+    });
+    doc.autoTable(tableColumn, tableRows, { startY: 30 });
+    doc.save(`exam_results_session_${sessionId}.pdf`);
+}
+
+function downloadFile(content, fileName, contentType) {
+    const blob = new Blob([content], { type: contentType });
+    const link = document.createElement("a");
+    link.href = URL.createObjectURL(blob);
+    link.download = fileName;
+    link.click();
+    URL.revokeObjectURL(link.href);
+}
+
+</script>
+</body>
+</html>
