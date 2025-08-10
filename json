@@ -1,0 +1,5 @@
+my-project/
+  package.json
+  netlify.toml
+  src/
+  public/
